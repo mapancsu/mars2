@@ -324,21 +324,19 @@ def shrink(x, p):
             ev = x[i]
             break
 
-    # if sp==0 and ep==len(x)-1:
-    #     return inter
     if sp==0 and ep!=len(x)-1:
         maxv = np.max(x[sp:ep])
-        if maxv/x[ep]>=2:
+        if maxv/x[ep]>=10:
             return [0, ep]
     elif sp!=0 and ep==len(x)-1:
         maxv = np.max(x[sp:ep])
-        if maxv/x[sp]>=2:
+        if maxv/x[sp]>=10:
             return [sp, len(x)-1]
     elif sp!=0 and ep!=len(x)-1:
         maxv = np.max(x[sp:ep])
-        if maxv/x[sp]>=3:
+        if maxv/x[sp]>=10:
             inter[0] = sp
-        if maxv/x[ep]>=3:
+        if maxv/x[ep]>=10:
             inter[1] = ep
         return inter
     return inter

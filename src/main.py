@@ -561,7 +561,7 @@ class MainWindowWidget(QtGui.QMainWindow):
                         ref_na = fn.replace("&", "")
                         if ref_na in self.files['fn']:
                             ref_no = 1
-                            ix = self.files['fn'].index(ref_na)
+                            ix = self.files['fn'][::-1].index(ref_na)
                             fn_str = str(fn)
                             file_str.append(fn_str.replace(".cdf", ""))
                     else:
@@ -575,7 +575,7 @@ class MainWindowWidget(QtGui.QMainWindow):
                 area[0, :] = range(1, com+1)
                 area[1, :] = np.array(self.MSRT['rt'])[self.msrttable.finished]
                 if ref_no == 1:
-                    area[2, :] = self.results[ix-1]['areas']
+                    area[2, :] = self.results[::-1][ix]['areas']
                 for ind, result in enumerate(self.results):
                     area[ind+2+ref_no, :] = result['areas']
                 DAT = np.vstack((fn_vec, area.T))

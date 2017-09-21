@@ -210,6 +210,8 @@ class HELPQDialg(QWidget):
         plt.subplots_adjust(bottom=0.2, top=0.90, left=0.08, right=0.9)
         self.redraw1()
         self.span1.set_active(True)
+        self.span2.set_active(False)
+        self.span3.set_active(False)
 
     def create_canvas2(self, xname, title):
         self.fig2 = plt.figure()
@@ -401,6 +403,9 @@ class HELPQDialg(QWidget):
             ymino, ymaxo = self.axes1.get_ylim()
             xmino, xmaxo = self.axes1.get_xlim()
             self.oxy = [(xmino, xmaxo), (ymino, ymaxo)]
+            self.span1.set_active(True)
+            self.span2.set_active(False)
+            self.span3.set_active(False)
 
     def undo(self):
         self.axes1.clear()
@@ -446,7 +451,6 @@ class HELPQDialg(QWidget):
             msgBox = QMessageBox()
             msgBox.setText("Please resolve all components")
             msgBox.exec_()
-
 
     def get_resu(self):
         self.getmsrt()
