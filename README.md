@@ -36,7 +36,7 @@ We have already noticed that user interface for feature extraction was helpful f
 
 ## 2.3 Guide for user ##
 
-MARS2 include two modules (Resolve and Extract). All details of resolving mass spectral and retention time (MSRT) pairs, and extracting features from batch datasets are available at [url](https://github.com/mapancsu/mars2/blob/master/guide%20for%20user.pdf)
+MARS2 include two modules (Resolve and Extract). All details of resolving mass spectral and retention time (MSRT) pairs, and extracting features from batch datasets are available at [url](https://github.com/mapancsu/mars2/blob/master/MARS_user_manual.pdf)
 
 # 3. Contact #
 
