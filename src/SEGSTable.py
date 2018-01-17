@@ -3,7 +3,6 @@ __author__ = 'Administrator'
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from NetCDF import netcdf_reader
 import numpy as np
 import sys
 
@@ -23,7 +22,7 @@ class SEGSTable(QtGui.QWidget):
     def createsegsTable(self):
         self.segsTable = QtGui.QTableWidget(0, 3)
         self.segsTable.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
-        self.segsTable.setHorizontalHeaderLabels(("SEG", "COM", " MTH "))
+        self.segsTable.setHorizontalHeaderLabels(("SEG(min)", "COM", " MTH "))
         self.segsTable.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Stretch)
         self.segsTable.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.ResizeToContents)
         self.segsTable.horizontalHeader().setResizeMode(2, QtGui.QHeaderView.ResizeToContents)
@@ -70,7 +69,6 @@ class SEGSTable(QtGui.QWidget):
         pcItem.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         pcItem.setFlags(pcItem.flags() ^ QtCore.Qt.ItemIsEditable)
         self.segsTable.setItem(no, 1, pcItem)
-        # R2Item = QtGui.QTableWidgetItem(str(np.round(result['methods'], 3)))
         R2Item = QtGui.QTableWidgetItem(result['methods'])
         R2Item.setTextAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
         R2Item.setFlags(R2Item.flags() ^ QtCore.Qt.ItemIsEditable)
@@ -115,7 +113,6 @@ class SEGSTable(QtGui.QWidget):
             MS.append(mms[val])
             segno.append(ssg[val])
         return {'ms': MS, 'rt': RT, 'segno': segno, 'mz': mz}
-        # self.emit(SIGNAL("updata_msrt"), msrt)
 
     def showmass(self):
         Selitems = self.segsTable.selectedItems()
@@ -153,16 +150,8 @@ class SEGSTable(QtGui.QWidget):
         # self.emit(SIGNAL("clear_massplot"))
         self.emit(SIGNAL("updataseg_no"), self.segments)  # to update segs in resoluwidget
 
-    # def msrtlist(self):
-    #     if len(self.rt) == 0:
-    #         msgBox = QMessageBox()
-    #         msgBox.setText("NO resolved MSRT.")
-    #         msgBox.exec_()
-    #     return {'ms': self.ms, 'rt': self.rt, 'segno': self.segno, 'mz': self.mz}
-
     def renew_table(self):
         for i, res in enumerate(self.resulist):
-            # self.segsTable.insertRow(i)
             seg = self.segments[i]
             roundseg = [round(seg[0], 3), round(seg[1], 3)]
             self.add_segitem(i, roundseg)
@@ -184,7 +173,6 @@ class SEGSTable(QtGui.QWidget):
         self.segments = seg
         self.resulist = result
         self.renew_table()
-        # self.updata_msrt(result)
 
 if __name__ == '__main__':
 

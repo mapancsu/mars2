@@ -1,15 +1,10 @@
 __author__ = 'Administrator'
 
 
-from numpy import zeros, hstack, ix_
-from matplotlib.ticker import FormatStrFormatter
+from numpy import ix_
 from scipy.linalg import norm
 from numpy.linalg import svd
-import scipy.io as nc
-import matplotlib.pyplot as plt
-import math
 import numpy as np
-import sys
 
 
 def efa(data):
@@ -106,13 +101,11 @@ def mcr_als(d, ns, crs, nit, options):
     tolsigma = 0.1
     niter = 0
     idev = 0
-    # d = x['d']
     if d.shape[0] == crs.shape[0]:
         conc = crs
         spec = np.dot(np.dot(np.linalg.inv(np.dot(conc.T, conc)), conc.T), d)
     elif d.shape[1] == crs.shape[1]:
         spec = crs
-        # conc = np.dot(d, np.dot(spec.T, np.linalg.inv(np.dot(spec.T, spec))))
     else:
         print('please import right initial estimation')
         exit()

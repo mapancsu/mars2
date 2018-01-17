@@ -1,18 +1,12 @@
 __author__ = 'Administrator'
 
 
-from numpy import zeros, hstack, ix_
-from matplotlib.ticker import FormatStrFormatter
+from numpy import ix_
 from scipy.linalg import norm
 from numpy.linalg import svd
-import scipy.io as nc
 import matplotlib.pyplot as plt
-import math
 import numpy as np
-import sys
 from NetCDF import netcdf_reader
-import time
-import pickle
 
 
 def efa(data):
@@ -104,112 +98,7 @@ def wmat(c, imp, irank, jvar):
             dm[k, kk] = c[kvar, kkvar]
     return dm
 
-
-# def mcr_als(d, ns, crs, nit, options, axes):
-#     tolsigma = 0.1
-#     niter = 0
-#     idev = 0
-#     # d = x['d']
-#     if d.shape[0] == crs.shape[0]:
-#         conc = crs
-#         spec = np.dot(np.dot(np.linalg.inv(np.dot(conc.T, conc)), conc.T), d)
-#     elif d.shape[1] == crs.shape[1]:
-#         spec = crs
-#         conc = np.dot(np.dot(d, spec.T), np.linalg.inv(np.dot(spec, spec.T)))
-#     else:
-#         print('please import right initial estimation')
-#         exit()
-#     dn = d
-#     u, s, v, d, sd = pcarep(dn, ns)
-#     sstn = np.sum(np.power(dn, 2))
-#     sst = np.sum(np.power(d, 2))
-#     sigma2 = np.power(sstn, 0.5)
-#
-#     while niter < nit:
-#         time1 = time.time()
-#         niter += 1
-#         # conc = np.dot(np.dot(d, spec.T), np.linalg.inv(np.dot(spec, spec.T)))
-#     # non-negative for concentration profile
-#         if options['chrom'][0] == "fnnls":
-#             conc2 = np.zeros(conc.shape)
-#             for j in range(0, conc.shape[0]):
-#                 a = fnnls(np.dot(spec, spec.T), np.dot(spec, d[j, :].T), tole='None')
-#                 conc2[j, :] = a['xx']
-#             conc = conc2
-#         time2 = time.time()
-#         t1 = time2-time1
-#
-#     # unimodality  for concentration profile
-#         if options['chrom'][1] == "average":
-#             # plt.plot(conc, 'r')
-#             mod = [1.1, 2]
-#             conc2 = unimod(conc, mod[0], mod[1])
-#             conc = conc2
-#             # plt.plot(conc, 'g')
-#             # plt.show()
-#         time3 = time.time()
-#         t2 = time3-time2
-#
-#         # spec = np.dot(np.dot(np.linalg.inv(np.dot(conc.T, conc)), conc.T), d)
-#     # non-negative for mass spectrum
-#         if options['mass'][0] == "fnnls":
-#             # plt.figure()
-#             # plt.plot(spec.T, 'r')
-#             spec2 = np.zeros(spec.shape)
-#
-#             ttt = np.zeros(spec.shape[1])
-#             for j in range(0, spec.shape[1]):
-#                 tt0 = time.time()
-#                 a = fnnls(np.dot(conc.T, conc), np.dot(conc.T, d[:, j]), tole='None')
-#                 spec2[:, j] = a['xx']
-#                 tt1 = time.time()
-#                 ttt[j] = tt1-tt0
-#             spec = spec2
-#             # plt.plot(spec.T, 'g')
-#             # plt.show()
-#             tttt = np.sum(ttt)
-#
-#         time4 = time.time()
-#         t3 = time4-time3
-#
-#         t4 = time4-time1
-#         axes.clear()
-#         axes.plot(conc)
-#         axes.redraw()
-#
-#         res = d-np.dot(conc, spec)
-#         resn = dn-np.dot(conc, spec)
-#         u = np.sum((np.power(res, 2)))
-#         un = np.sum((np.power(resn, 2)))
-#         sigma = np.power(u / (d.shape[0]*d.shape[1]), 0.5)
-#         change = (sigma2 - sigma)/sigma
-#         if change < 0.0:
-#             idev += 1
-#         else:
-#             idev = 0
-#         change = np.dot(100, change)
-#         lof_pca = np.power((u/sst), 0.5)*100
-#         lof_exp = np.power((un/sstn), 0.5)*100
-#         r2 = (sstn-un)/sstn
-#         if change > 0 or niter == 0:
-#             sigma2 = sigma
-#             copt = conc
-#             sopt = spec
-#             itopt = niter+1
-#             sdopt = np.array([lof_pca, lof_exp])
-#             ropt = res
-#             r2opt = r2
-#         if abs(change) < tolsigma:
-#             print('CONVERGENCE IS ACHIEVED, STOP!!!')
-#             break
-#         if idev >= 20:
-#             print('FIT NOT IMPROVING FOR 20 TMES CONSECUTIVELY (DIVERGENCE?), STOP!!!')
-#             break
-#         print(str(niter))
-#     return {'copt': copt, 'sopt': sopt, 'sdopt': sdopt, 'r2opt': r2opt, 'ropt': ropt, 'itopt': itopt}
-
-
-def mcr_als(d, ns, crs, options):
+def mcr_als(d, dn, sst, sstn, sigma2, crs, options):
     if d.shape[0] == crs.shape[0]:
         conc = crs
         spec = np.dot(np.dot(np.linalg.inv(np.dot(conc.T, conc)), conc.T), d)
@@ -218,12 +107,6 @@ def mcr_als(d, ns, crs, options):
         conc = np.dot(np.dot(d, spec.T), np.linalg.inv(np.dot(spec, spec.T)))
     else:
         print('please import right initial estimation')
-        exit()
-    dn = d
-    u, s, v, d, sd = pcarep(dn, ns)
-    sstn = np.sum(np.power(dn, 2))
-    sst = np.sum(np.power(d, 2))
-    sigma2 = np.power(sstn, 0.5)
 
     if options['chrom'][0] == "fnnls":
         conc2 = np.zeros(conc.shape)
@@ -239,25 +122,22 @@ def mcr_als(d, ns, crs, options):
 
     if options['mass'][0] == "fnnls":
         spec2 = np.zeros(spec.shape)
-        ttt = np.zeros(spec.shape[1])
         for j in range(0, spec.shape[1]):
-            tt0 = time.time()
             a = fnnls(np.dot(conc.T, conc), np.dot(conc.T, d[:, j]), tole='None')
             spec2[:, j] = a['xx']
-            # tt1 = time.time()
-            # ttt[j] = tt1-tt0
-        spec = spec2
+    spec = spec2
 
-        res = d-np.dot(conc, spec)
-        resn = dn-np.dot(conc, spec)
-        u = np.sum((np.power(res, 2)))
-        un = np.sum((np.power(resn, 2)))
-        sigma = np.power(u / (d.shape[0]*d.shape[1]), 0.5)
-        change = (sigma2 - sigma)/sigma
-        change = np.dot(100, change)
-        lof_pca = np.power((u/sst), 0.5)*100
-        lof_exp = np.power((un/sstn), 0.5)*100
-        r2 = (sstn-un)/sstn
+    res = d-np.dot(conc, spec)
+    resn = dn-np.dot(conc, spec)
+    u = np.sum((np.power(res, 2)))
+    un = np.sum((np.power(resn, 2)))
+    sigma = np.power(u / (d.shape[0]*d.shape[1]), 0.5)
+    # print(sigma2)
+    # print(sigma)
+    change = (sigma2 - sigma)/sigma
+    lof_pca = np.power((u/sst), 0.5)*100
+    lof_exp = np.power((un/sstn), 0.5)*100
+    r2 = (sstn-un)/sstn
     return conc, spec, res, resn, u, un, sigma, change, lof_pca, lof_exp, r2
 
 
@@ -285,6 +165,7 @@ def MCRALS(x, pc, pures, options):
             lof_exp = np.power((un/sstn), 0.5)*100
             r2 = (sstn-un)/sstn
             if change > 0 or niter == 0:
+                print(change)
                 copt = conc
                 sopt = spec
                 itopt = niter+1
@@ -318,7 +199,6 @@ def MCRALS(x, pc, pures, options):
         return RESU
 
 def pcarep(xi, nf):
-    # xi = x['d']
     u, s, v = np.linalg.svd(xi)
     x = np.dot(np.dot(u[:, 0:nf], np.diag(s[0:nf])), v[0:nf, :])
     res = xi - x
@@ -443,10 +323,10 @@ def backremv(x, seg):
 
 if __name__ == '__main__':
 
-    filename = 'E:\BDY-Synchronize\pycharm-GUI\pycharm_project\storedata/t2(2).cdf'
+    filename = 'F:\MARS\data_save\D6/73.CDF'
     ncr = netcdf_reader(filename, True)
     options = {'chrom':['fnnls', 'average'], 'mass':['fnnls']}
-    x = ncr.mat(1600, 1700, 1)
+    x = ncr.mat(1850, 1890, 1)
     # ax = plt.figure()
     # ax.add_subplot(111)
     # ax.show()
@@ -454,28 +334,28 @@ if __name__ == '__main__':
     plt.show()
 
     ### test MCR_ALS
-    pures = pure(x['d'].T, 1, 10)
-    RESU = MCRALS(x, 1, pures['SP'], options)
+    pures = pure(x['d'].T, 3, 10)
+    # RESU = MCRALS(x, 3, pures['SP'], options)
 
-    moptions = {'pw':80, 'w':3, 'thres':0.8}
-    MSRT = {'ms': RESU['spec'], 'rt': RESU['rt']}
+    # moptions = {'pw':80, 'w':3, 'thres':0.8}
+    # MSRT = {'ms': RESU['spec'], 'rt': RESU['rt']}
 
-    plt.plot(RESU['chro'].T)
-    plt.show()
+    # plt.plot(RESU['chro'].T)
+    # plt.show()
 
     # data = {'MSRT': MSRT, 'options': moptions,
     #         'ncr': ncr}
 
-    data = {'MSRT': MSRT,'options': moptions, 'fn':filename}
-
-    output1 = open('data5.pkl', 'wb')
-    pickle.dump(data, output1)
-    output1.close()
-
-    pkl_file = open('data5.pkl')
-    data1 = pickle.load(pkl_file)
-
-    save_path = 'random_walk.png'
+    # data = {'MSRT': MSRT,'options': moptions, 'fn':filename}
+    #
+    # output1 = open('data5.pkl', 'wb')
+    # pickle.dump(data, output1)
+    # output1.close()
+    #
+    # pkl_file = open('data5.pkl')
+    # data1 = pickle.load(pkl_file)
+    #
+    # save_path = 'random_walk.png'
 
 ### test fnnls
     # tt = np.zeros(s.shape[1])
@@ -486,6 +366,4 @@ if __name__ == '__main__':
     #     t2 = time.time()
     #     tt[j] = t2-t1
     # tsum = np.sum(tt)
-
-###
 

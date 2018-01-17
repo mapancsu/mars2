@@ -13,6 +13,7 @@ from PyQt4.QtCore import Qt,QSettings,QVariant,QSize,SIGNAL,SLOT,QPoint
 from PyQt4.QtGui import (QVBoxLayout,QLabel,QTreeWidgetItem,QTreeWidget,QListWidget,QFont,
                          QHBoxLayout,QPen,QPushButton,QColor,QLineEdit)
 import numpy as np
+from math import ceil, floor
 from scipy.sparse import coo_matrix
 import time
 from ElementalComposition import ElemCompDialog
@@ -61,7 +62,7 @@ class LibrarySearchDialog(QtGui.QDialog):
         size = settings.value("MainWindow/Size",QVariant(QSize(1024,600))).toSize()
         self.resize(size)
 
-        self.setWindowTitle('Identify unknown compound by NIST 2011 Library')
+        self.setWindowTitle('Identify unknown compound by mass spectra Library')
         self.ms=ms
         pms=processMS(ms)
         self.axis=pms[0]
@@ -112,7 +113,7 @@ class LibrarySearchDialog(QtGui.QDialog):
         self.plot2 = Qwt.QwtPlot(self)
         self.plot2.setCanvasBackground(Qt.white)
         
-        library_label = QLabel("MS in NIST Library:")
+        library_label = QLabel("MS in mass spectra Library:")
         self.library_list = QTreeWidget()
         self.library_list.setColumnCount(3)
         self.library_list.setHeaderLabels(['No.','Similarity','Mol Wt','Formula','Name'])
@@ -157,7 +158,6 @@ class LibrarySearchDialog(QtGui.QDialog):
         self.plot3.setAxisScale(self.plot1.yLeft,-4,4)
         self.plot1.clear()
         self.plot1.setTitle("Search MS")
-#        self.plot1.setAxisTitle(Qwt.QwtPlot.xBottom, 'Raman shift (cm-1)')
         self.plot1.setAxisTitle(Qwt.QwtPlot.yLeft, 'Intensity')
         grid = Qwt.QwtPlotGrid()
         pen = QPen(Qt.DotLine)

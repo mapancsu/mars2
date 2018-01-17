@@ -4,8 +4,6 @@ import numpy as np
 from numpy import ix_
 from numpy.linalg import svd
 from scipy.linalg import norm
-from matplotlib.ticker import FormatStrFormatter
-from matplotlib.pyplot import figure, show, plot
 
 def backremv(x, start1, end1, start2, end2):
     mn = x.shape
@@ -20,16 +18,6 @@ def backremv(x, start1, end1, start2, end2):
         b_est = s+b*np.arange(mn[0])
         bak2[:, i] = x[:, i]-b_est
     return{'Back': bak2}
-
-
-    # m_n = backremv(m['d'], 0, 20, 70, 100)
-    # fig = plt.figure()
-    #  ax1 = fig.add_subplot(2, 1, 1)
-    #  plt.plot(m['d'])
-    #  plt.axis('tight')
-    #  ax2 = fig.add_subplot(2, 1, 2)
-    #  plt.plot(m_n['Back'])
-    #  plt.axis('tight')
 
 def efa(data):
     x = data['d']
@@ -70,7 +58,6 @@ def efa(data):
             if ebl[i, j] == 0:
                 ebl[i, j] = minvalue
     xbackward = np.linspace(rz[0]-1, 1, -1)
-
     return{'efor': ef, 'efl': efl, 'ebac': eb, 'ebl': ebl}
 
 def pure(d, nr, f):
@@ -302,18 +289,3 @@ def unimod(c, rmod, cmod):
                             c[k, j] = 0
                     rmax = c[k, j]
     return c
-
-# frrs = frr(m, [32, 43], [0, 25, 54, 90], 2)
-# fig = plt.figure()
-# plt.plot(frrs['x_ext'])
-
-# efas = efa(m)
-# plot_efa(efas, thre=8)
-
-# pures = pure(m['d'], 2, 0.1)
-# fig = plt.figure()
-# plt.plot(pures['SP'].T)
-# plt.axis('tight')
-
-# pures = pure(m['d'], 2, 0.1)
-# mrcs = mcr_als(m['d'], 2, pures['SP'], 50)

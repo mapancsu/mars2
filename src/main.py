@@ -4,7 +4,7 @@ import sys
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from PyQt4 import QtCore,QtGui
+from PyQt4 import QtGui
 import numpy as np
 import pickle
 import os.path
@@ -48,7 +48,7 @@ class MainWindowWidget(QtGui.QMainWindow):
         self.ticplot.setMinimumHeight(200)
         self.ticplot.setMaximumHeight(700)
         self.msrttable = MSRTTableWidget()
-        # self.msrttable.setMaximumWidth(300)
+
         self.massdlg = MASSPlotDlg()
         self.massdlg.setMaximumWidth(1180)
         self.setmarsbutton = QPushButton('Set MARS')
@@ -57,12 +57,6 @@ class MainWindowWidget(QtGui.QMainWindow):
         self.LIBSERCHbutton = QPushButton("LIB search")
         self.exportbutton = QPushButton("EXPORT")
 
-        # self.nextbutton = QPushButton("NEXT")
-        # self.prevbutton = QPushButton("PREV")
-
-        # hhbox = QHBoxLayout()
-        # hhbox.addStretch()
-        # hhbox.addWidget(self.updatabutton)
         hbox = QHBoxLayout()
         vbox = QVBoxLayout()
         vbox.addWidget(self.resoluset)
@@ -81,8 +75,6 @@ class MainWindowWidget(QtGui.QMainWindow):
 
         HQsplitter = QSplitter(Qt.Horizontal, self)
         self.segtable.setFixedWidth(250)
-        # self.segtable.setMaximumWidth(300)
-        # HQsplitter.setStretchFactor(1, 6)
         HQsplitter.addWidget(self.segtable)
         HQsplitter.addWidget(Comwidget)
         HQsplitter.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -94,7 +86,6 @@ class MainWindowWidget(QtGui.QMainWindow):
         ManualSplitter.addWidget(HQsplitter)
 
         vhbox = QVBoxLayout()
-        # vhbox.addStretch()
         vhbox.addWidget(self.setmarsbutton)
         vhbox.addWidget(self.startmasrbutton)
         vhbox.addWidget(self.restartmasrbutton)
@@ -102,17 +93,10 @@ class MainWindowWidget(QtGui.QMainWindow):
         vhbox.addStretch()
         vhbox.addWidget(self.exportbutton)
 
-        # vhbox1 = QVBoxLayout()
-        # vhbox1.addStretch()
-        # vhbox1.addWidget(self.prevbutton)
-        # vhbox1.addWidget(self.nextbutton)
-        # vhbox1.addStretch()
-
         Vlay1 = QHBoxLayout()
         Vlay1.addWidget(self.massdlg)
         Vlay1.setStretchFactor(self.massdlg, 6)
         Vlay1.setStretchFactor(vhbox, 1)
-        # Vlay1.addLayout(vhbox1)
         Vlay1.addStretch()
         Vlay1.addLayout(vhbox)
         VComwidget = QWidget()
@@ -171,8 +155,6 @@ class MainWindowWidget(QtGui.QMainWindow):
 
         self.connect(self.resoluset, SIGNAL("results"), self.segtable.updata_resulist)
         self.connect(self.setmarsbutton, SIGNAL("clicked()"), self.setparameter)
-
-        # self.connect(self.segtable, SIGNAL("updata_msrt"), self.msrttable.update_msrt)
         self.connect(self.fileWidget, SIGNAL("update_files"), self.update_files)
         self.connect(self.fileWidget, SIGNAL("updata_mars_results"), self.update_mars_results)
 
@@ -186,7 +168,6 @@ class MainWindowWidget(QtGui.QMainWindow):
 
         self.options = self.setmarsdlg.options
         self.files = self.fileWidget.files
-        # self.MSRT = self.msrttable.MSRT
         self.MSRT = {}
 
         self.results = []
@@ -238,7 +219,6 @@ class MainWindowWidget(QtGui.QMainWindow):
             if self.massdlg.massplot in rtitems:
                 pos = rtitems.index(self.massdlg.massplot)
                 if len(rtitems) > pos+1:
-                    # massplot = rtitems[pos+1]
                     rt = self.MSRT['rt'][pos+1]
                     self.jude_massplot(pos+1)
             else:
@@ -253,11 +233,7 @@ class MainWindowWidget(QtGui.QMainWindow):
             msgBox.exec_()
         else:
             self.MSRT = self.segtable.msrtlist()
-            # print(len(self.MSRT['rt']))
-            # msgBox = QMessageBox()
-            # msgBox.setText("MSRT table has updated")
             self.msrttable.add_msrt(self.MSRT)
-            # msgBox.exec_()
 
     def update_msrt(self, msrt, rows):
         self.MSRT = msrt
@@ -396,7 +372,6 @@ class MainWindowWidget(QtGui.QMainWindow):
 
     def setparameter(self):
         self.setmarsdlg.setModal(True)
-        self.setmarsdlg.move(QPoint(50, 50))
         self.setmarsdlg.show()
         self.setmarsdlg.exec_()
         self.options = self.setmarsdlg.options
@@ -418,7 +393,7 @@ class MainWindowWidget(QtGui.QMainWindow):
         else:
             if len(self.results) == 0:
                 MSRT = self.MSRT
-                files = self.files #['files']
+                files = self.files
                 fns = self.files['fn']
                 flag = 0
                 fflag = 0
@@ -485,10 +460,6 @@ class MainWindowWidget(QtGui.QMainWindow):
                         return
                 self.results = self.combine_result(results1, vsel)
                 self.results.extend(results2)
-            # elif flag == 0 and fflag == 0:
-            #     msgBox = QMessageBox()
-            #     msgBox.setText("Files have finished")
-            #     msgBox.exec_()
             else:
                 results = []
                 for ind, fn in enumerate(files['files']):
@@ -531,8 +502,6 @@ class MainWindowWidget(QtGui.QMainWindow):
                 tzs = np.insert(tzs, v, new_res['tzs'][j,:], axis=0)
                 areas = np.insert(areas, v, new_res['areas'][j])
                 highs = np.insert(highs, v, new_res['highs'][j])
-                # rts = np.insert(rts, v, new_res['rts'])
-                # rts.insert(v, new_res['rts'][j])
                 orcs.insert(v, new_res['orc'][j])
             new_old = {'chrs': chrs, 'segs': segs, 'tzs': tzs, 'areas': areas, 'highs': highs, 'rts':rts, 'orc': orcs}
             fin_results.append(new_old)
@@ -541,11 +510,7 @@ class MainWindowWidget(QtGui.QMainWindow):
     def getQUANQUAL_table(self):
         if len(self.results) >= 1:
             if len(self.idents) == 0:
-                # name = QtGui.QFileDialog.getSaveFileName(self, "Find Files", QDir.currentPath())
-                # name = QtGui.QFileDialog.getSaveFileNameAndFilter()
                 file_formats = "txt file (*.txt);;"
-                #JPG File (*.jpeg *.jpg);;
-
                 path, selected_filter = QtGui.QFileDialog.getSaveFileNameAndFilter(self, "Find Files", ".",
                                                                                    file_formats)
                 if not path:
@@ -569,13 +534,13 @@ class MainWindowWidget(QtGui.QMainWindow):
                         file_str.append(fn_str.replace(".cdf", ""))
                 pre_vec.extend(file_str)
                 fn_vec = np.array(pre_vec, ndmin=2)
-                # Dir = str(self.files['dir'])
 
                 area = np.zeros((len(self.files['fn'])+1+ref_no, com))
                 area[0, :] = range(1, com+1)
                 area[1, :] = np.array(self.MSRT['rt'])[self.msrttable.finished]
+                cc = len(self.files['fn'])-ref_no-ix-1
                 if ref_no == 1:
-                    area[2, :] = self.results[::-1][ix]['areas']
+                    area[2, :] = self.results[len(self.files['fn'])-ref_no-ix-1]['areas']
                 for ind, result in enumerate(self.results):
                     area[ind+2+ref_no, :] = result['areas']
                 DAT = np.vstack((fn_vec, area.T))
@@ -601,7 +566,6 @@ class MainWindowWidget(QtGui.QMainWindow):
         files = []
         fn = []
         for i in range(0, len(fns['files'])):
-            # fn.append(unicode(fns['fn'][i]))
             fn.append(str(fns['fn'][i]))
             files.append(str(fns['files'][i]))
         return {'fn': fn, 'files': files, 'dir': dir}
@@ -619,6 +583,42 @@ class MainWindowWidget(QtGui.QMainWindow):
         finish_files = self.finish_files
         return files, results, MSRT, options, segments, ref_seg, resu_results, finished, finish_files
 
+    def saveMSRT(self):
+        name = QtGui.QFileDialog.getSaveFileName(self, "Find Files", QDir.currentPath())
+        if len(name):
+            MSRT = self.msrttable.MSRT
+            if len(MSRT):
+                DATAF = open(name, 'w')
+                pickle.dump(MSRT, DATAF)
+                DATAF.close()
+            else:
+                msgBox = QMessageBox()
+                msgBox.setText("NO resolved MSRT pairs.")
+                msgBox.exec_()
+
+    def loadingMSRT(self):
+        name = QtGui.QFileDialog.getOpenFileName(self, "Loading MSRT", QDir.currentPath())
+        if len(name):
+            pkl_file = open(str(name))
+            msrtdata = pickle.load(pkl_file)
+            if len(self.msrttable.finished) >= 1:
+                reply = QMessageBox.warning(self, "Warning...",
+                                        "MSRT pairs in MSRT table will be replaced ?",
+                                        QMessageBox.Yes, QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    self.msrttable.finished = []
+                    self.MSRT = msrtdata
+                    self.msrttable.MSRT = msrtdata
+                    self.msrttable.loading(self.MSRT, self.msrttable.finished)
+            else:
+                self.MSRT = msrtdata
+                self.msrttable.MSRT = msrtdata
+                self.msrttable.loading(self.MSRT, self.msrttable.finished)
+        else:
+            msgBox = QMessageBox()
+            msgBox.setText("NO selected MSRT files.")
+            msgBox.exec_()
+
     def saveprojects(self):
         files, results, MSRT, options, segments, ref_seg, resu_results, finished, finish_files = self.get_project()
         projection_data = {'files': files, 'MSRT': MSRT, 'options': options, 'segments': segments, 'ref_seg': ref_seg,
@@ -635,14 +635,12 @@ class MainWindowWidget(QtGui.QMainWindow):
             files, results, MSRT, options, segments, ref_seg, resu_results, finished, finish_files = self.get_project()
             projection_data = {'files': files, 'MSRT': MSRT, 'options': options, 'segments': segments, 'ref_seg': ref_seg,
                                'results': results, 'resu_results': resu_results, 'finished': finished, 'finish_files': finish_files}
-            # DATAF = open(str(Dir) + '\MARS_Project.pkl', 'w')
             DATAF = open(name, 'w')
             pickle.dump(projection_data, DATAF)
             DATAF.close()
 
     def OpenProjection(self):
         name = QtGui.QFileDialog.getOpenFileName(self, "Loading Project", QDir.currentPath())
-        # path = QtGui.QFileDialog.get
         if len(name):
             if len(self.files['fn']) >= 2:
                 reply = QMessageBox.warning(self, "Warning...",
@@ -675,7 +673,6 @@ class MainWindowWidget(QtGui.QMainWindow):
 
         self.files = pdata['files']
         files = []
-        tt = os.path.isdir(self.files['dir'])
         if not os.path.isdir(self.files['dir']):
             dir = str(self.fileWidget.directoryComboBox.currentText())
         else:
@@ -750,6 +747,16 @@ class MainWindowWidget(QtGui.QMainWindow):
         OpenProjectionAction.setStatusTip('Open saved projection')
         OpenProjectionAction.triggered.connect(self.OpenProjection)
 
+        LoadingMSRTAction = QtGui.QAction(QtGui.QIcon('images/openMSRT.png'), '&Loading MSRT', self)
+        LoadingMSRTAction.setShortcut('Ctrl+Shift+L')
+        LoadingMSRTAction.setStatusTip('loading MSRT')
+        LoadingMSRTAction.triggered.connect(self.loadingMSRT)
+
+        SaveMSRTAction = QtGui.QAction(QtGui.QIcon('images/saveMSRT.png'), '&Save MSRT', self)
+        SaveMSRTAction.setShortcut('Ctrl+Shift+S')
+        SaveMSRTAction.setStatusTip('save MSRT')
+        SaveMSRTAction.triggered.connect(self.saveMSRT)
+
         ExitAction = QtGui.QAction(QtGui.QIcon('images/save.png'), '&Exit', self)
         ExitAction.setShortcut('Ctrl+E')
         ExitAction.setStatusTip('Exit')
@@ -765,6 +772,8 @@ class MainWindowWidget(QtGui.QMainWindow):
         file.addAction(OpenProjectionAction)
         file.addAction(saveProjectionAction)
         file.addAction(saveProjectionasAction)
+        file.addAction(SaveMSRTAction)
+        file.addAction(LoadingMSRTAction)
         file.addAction(ExitAction)
         # resolu = menubar.addMenu('&Resolution')
         # resolu.addAction(selectreference)

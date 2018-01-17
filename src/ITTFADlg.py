@@ -1,39 +1,14 @@
 __author__ = 'Administrator'
 
-
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from NetCDF import netcdf_reader
-import numpy as np
-import sys
-from chemoMethods import mcr_als, pcarep, pure
-import PUREDWIDGET
-import ITERWIDGET
 from MARS_methods import ittfa, fnnls
-
-
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
-import numpy as np
 from scipy.linalg import norm
-import sys
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
 
-from chemoMethods import mcr_als, pcarep, pure
-
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
+from PyQt4 import QtGui
 from PyQt4.QtGui import *
-from NetCDF import netcdf_reader
 import numpy as np
 import sys
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from chemoMethods import pcarep, pure
 
 class ITTFAQDialg(QWidget):
     def __init__(self, parent=None):
@@ -41,7 +16,7 @@ class ITTFAQDialg(QWidget):
         self.results = {}
         self.createVariabletable()
         self.create_canvas1('scan', 'Raw Scans')
-        self.create_canvas2('scan', 'CHROM Profiles')
+        self.create_canvas2('scan', 'Resolved Chromatographic Profiles')
         self.canvas1.setMinimumWidth(800)
         self.canvas1.setMaximumWidth(800)
         self.canvas2.setMinimumWidth(800)
@@ -55,10 +30,34 @@ class ITTFAQDialg(QWidget):
         self.Addbtn = QPushButton("Add raw data")
         self.Pickbtn = QPushButton("Undo Pick")
         self.startbtn = QPushButton("Start ITTFA")
-        hbox = QVBoxLayout()
-        hbox.addWidget(self.Addbtn)
-        hbox.addWidget(self.Pickbtn)
-        hbox.addWidget(self.startbtn)
+        self.undobtn = QPushButton("Undo")
+
+        Addcomlabel = QLabel("Com:")
+        self.addcomspin = QSpinBox()
+        self.addcomspin.setRange(1, 10)
+        Addcomlabel.setBuddy(self.addcomspin)
+
+        ResultLabel = QLabel("R2:")
+        self.R2text = QLineEdit()
+        ResultLabel.setBuddy(self.R2text)
+
+        hbbox = QHBoxLayout()
+        hbbox.addWidget(ResultLabel)
+        hbbox.addWidget(self.R2text)
+
+        hbox = QGridLayout()
+        hbox.addWidget(QLabel(), 0, 0)
+        hbox.addWidget(self.Addbtn, 0, 1)
+        hbox.addWidget(Addcomlabel, 1, 0)
+        hbox.addWidget(self.addcomspin, 1, 1)
+        hbox.addWidget(QLabel(), 2, 0)
+        hbox.addWidget(self.Pickbtn, 2, 1)
+        hbox.addWidget(QLabel(), 3, 0)
+        hbox.addWidget(self.startbtn, 3, 1)
+        hbox.addWidget(ResultLabel, 4, 0)
+        hbox.addWidget(self.R2text, 4, 1)
+        hbox.addWidget(QLabel(), 5, 0)
+        hbox.addWidget(self.undobtn, 5, 1)
 
         hbox1 = QVBoxLayout()
         hbox1.addWidget(self.canvas1)
@@ -73,10 +72,9 @@ class ITTFAQDialg(QWidget):
         self.move(320, 75)
         self.setWindowTitle("ITTFA")
 
-        # self.Addbtn.clicked.connect(self.add_data)
         self.Pickbtn.clicked.connect(self.undo_mode)
         self.startbtn.clicked.connect(self.start_ittfa)
-        # self.startbutton.clicked.connect(self.mcrals)
+        self.undobtn.clicked.connect(self.undo)
         self.pc = 0
         self.apxs = []
         self.ms = []
@@ -95,11 +93,6 @@ class ITTFAQDialg(QWidget):
             self.xdata = event.xdata
             ind = np.searchsorted(range(int(self.oxy[0][0]), int(self.oxy[0][1])), event.xdata)
             self.apxs.append(ind)
-            # rt = self.x['rt'][ind]
-            # self.apx.append(ind)
-            # self.rt.append(rt)
-            # self.ms.append(ms)
-            #del self.axes.collections[:]
             self.axes1.vlines(event.xdata, self.oxy[1][0], self.oxy[1][1],
                              color='g', linestyles='-')
             self.redraw1()
@@ -136,25 +129,29 @@ class ITTFAQDialg(QWidget):
         self.x = x
         self.pc = pc
         self.axes1.plot(x['d'])
+        self.addcomspin.setValue(pc)
         ymino, ymaxo = self.axes1.get_ylim()
         xmino, xmaxo = self.axes1.get_xlim()
         self.oxy = [(xmino, xmaxo), (ymino, ymaxo)]
         self.redraw1()
 
     def start_ittfa(self):
+        pc = self.addcomspin.value()
         if len(self.apxs) == 0:
             msgBox = QMessageBox()
             msgBox.setText("Please Pick apex")
             msgBox.exec_()
         else:
-            C = np.zeros((self.x['d'].shape[0], self.pc))
+            C = np.zeros((self.x['d'].shape[0], pc))
             for i, v in enumerate(self.apxs):
-                c = ittfa(self.x['d'], v, self.pc)
+                c = ittfa(self.x['d'], v, pc)
                 C[:, i] = c[:,0]
-            S = np.zeros((self.pc, self.x['d'].shape[1]))
+            S = np.zeros((pc, self.x['d'].shape[1]))
             for j in range(0, S.shape[1]):
                 a = fnnls(np.dot(C.T, C), np.dot(C.T, self.x['d'][:, j]), tole='None')
                 S[:, j] = a['xx']
+
+            R2 = norm(np.dot(C,S))/norm(self.x['d'])
 
             rts = self.x['rt'][np.sort(np.argmax(C, axis=0))]
             index = np.argsort(np.argmax(C, axis=0))
@@ -163,6 +160,15 @@ class ITTFAQDialg(QWidget):
                 ss = S[val, :]
                 self.ms.append(ss / norm(ss))
             self.update_fig(C)
+            self.R2text.setText(str(np.round(R2, 3)))
+
+    def undo(self):
+        self.axes2.clear()
+        self.axes2.set_xlabel('scan')
+        self.axes2.set_title('Resolved Chromatographic Profiles', fontsize=9)
+        self.axes2.tick_params(axis='both', labelsize=8)
+        self.redraw2()
+        self.add_data(self.x, self.pc)
 
     def add_items(self, result):
         self.optiterQtext.setText(str(result['itopt']))
@@ -172,6 +178,9 @@ class ITTFAQDialg(QWidget):
 
     def update_fig(self, C):
         self.axes2.clear()
+        self.axes2.set_xlabel('scan')
+        self.axes2.set_title('Resolved Chromatographic Profiles', fontsize=9)
+        self.axes2.tick_params(axis='both', labelsize=8)
         self.axes2.plot(C)
         self.redraw2()
 
@@ -189,7 +198,7 @@ class ITTFAQDialg(QWidget):
         if len(self.rt):
             RESU = {"methods": "I", "ms": self.ms, 'rt': self.rt, 'mz': self.x['mz'], 'pc':self.pc, 'R2': 'none'}
         else:
-            RESU = []
+            RESU = {}
         return RESU
 
 

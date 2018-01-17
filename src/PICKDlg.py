@@ -2,15 +2,12 @@ __author__ = 'Administrator'
 
 
 import sys
-from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector, SpanSelector, Button
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.widgets import Button
 import numpy as np
-from NetCDF import netcdf_reader
 
 class PICKQDialg(QWidget):
     def __init__(self):
@@ -28,7 +25,6 @@ class PICKQDialg(QWidget):
         self.resize(800, 600)
         self.move(320, 75)
         self.setWindowTitle("PICK MSRT")
-
 
     def create_canvas(self):
         self.fig = plt.figure()
@@ -76,8 +72,6 @@ class PICKQDialg(QWidget):
             ms = self.x['d'][ind, :]/np.linalg.norm(self.x['d'][ind, :])
             self.rt.append(rt)
             self.ms.append(ms)
-
-            #del self.axes.collections[:]
             self.axes.vlines(event.xdata, self.oxy[1][0], self.oxy[1][1],
                              color='g', linestyles='-')
             self.redraw()
@@ -87,10 +81,9 @@ class PICKQDialg(QWidget):
         self.axes.clear()
         self.x = x
         self.y = np.sum(x['d'], axis=1)
-        self.axes.plot(self.y, lw=1, c='b', alpha=.7, picker=5)
-        diff_y = max(self.y) - min(self.y)
+        self.axes.plot(self.x['d'], lw=1, alpha=.7, picker=5)
         self.axes.set_xlim(0, len(self.y))
-        self.axes.set_ylim(0, max(self.y) * 1.1)
+        self.axes.set_ylim(0, np.max(self.x['d']) * 1.1)
         ymino, ymaxo = self.axes.get_ylim()
         xmino, xmaxo = self.axes.get_xlim()
         self.oxy = [(xmino, xmaxo), (ymino, ymaxo)]
@@ -102,9 +95,6 @@ class PICKQDialg(QWidget):
         else:
             RESU = []
         return RESU
-    # def accept(self):
-    #     self.xx['d'] = self.yy
-    #     self.close()
 
 if __name__ == '__main__':
 

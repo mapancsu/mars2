@@ -5,7 +5,6 @@ def findTZ(data, MSRT, w, thre):
     d = data['d']
     rto = data['rt']
     ms = MSRT['MS']
-    # rt0 = MSRT['RT']
     max_pc = 5
     resp, eig = MSWFA(d, ms, max_pc, w, thre)
     if resp.size:

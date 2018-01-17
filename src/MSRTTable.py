@@ -3,7 +3,6 @@ __author__ = 'Administrator'
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from NetCDF import netcdf_reader
 import numpy as np
 import sys
 
@@ -20,8 +19,6 @@ class MSRTTableWidget(QtGui.QWidget):
         self.setLayout(mainLayout)
         self.setWindowTitle("MSRTTable")
         self.connect(self.msrtTable, SIGNAL("itemDoubleClicked (QTableWidgetItem*)"), self.showmasschrom)
-        # self.connect(self.msrtTable, SIGNAL("itemDoubleClicked(QTreeWidgetItem *, int)"), self,
-        #         SLOT(self.getItem(QTreeWidgetItem *, int)))
 
     def createmsrtTable(self):
         self.msrtTable = QtGui.QTableWidget(0, 2)
@@ -31,7 +28,6 @@ class MSRTTableWidget(QtGui.QWidget):
         self.msrtTable.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Stretch)
         self.msrtTable.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
         self.msrtTable.verticalHeader()
-        # self.msrtTable.verticalHeader().hide()
         self.msrtTable.setShowGrid(True)
         self.msrtTable.setContextMenuPolicy(Qt.CustomContextMenu)
         self.msrtTable.customContextMenuRequested.connect(self.showContextMenu)
@@ -44,17 +40,6 @@ class MSRTTableWidget(QtGui.QWidget):
 
     def showContextMenu(self, pos):
         self.contextMenu.exec_(self.msrtTable.mapToGlobal(pos))
-
-    # def add_items(self, msrt, segno):
-    #     self.msrts.append(msrt)
-    #     msrtItem = QtGui.QTableWidgetItem(str(msrt['rt']))
-    #     segnoItem = QtGui.QTableWidgetItem(str(segno))
-    #
-    #     msrtItem.setFlags(msrtItem.flags() ^ QtCore.Qt.ItemIsEditable)
-    #     segnoItem.setFlags(segnoItem.flags() ^ QtCore.Qt.ItemIsEditable)
-    #
-    #     self.msrtTable.setItem(row, 1, msrtItem)
-    #     self.segnoTable.setItem(row, 2, segnoItem)
 
     def showmasschrom(self):
         Items = self.msrtTable.selectedItems()
@@ -84,9 +69,8 @@ class MSRTTableWidget(QtGui.QWidget):
             rows1 = []
             for i in range(0, len(Selitems)):
                 rows1.append(self.msrtTable.row(Selitems[i]))
-            # rows =   # find delete rows
             rows = []
-            for row in np.sort(np.unique(rows1))[::-1]:  # updata segments list and result list
+            for row in np.sort(np.unique(rows1))[::-1]:
                 if row in self.finished:
                     ro = np.searchsorted(self.finished, row)
                     # self.finished.pop(ro)
@@ -96,24 +80,7 @@ class MSRTTableWidget(QtGui.QWidget):
                 ms.pop(row)
                 segno.pop(row)
                 self.MSRT = {'ms': ms, 'rt': rt, 'segno': segno, 'mz': mz}
-
-                # if len(self.resulist) >= row+1:
-                #     self.resulist.remove(self.resulist[row])
             self.emit(SIGNAL("updata_msrt"), self.MSRT, rows)
-
-    # def showresult(self):
-    #     L = self.filesTable.selectedItems()
-    #     if len(L[0:len(L)/2]) >= 2:
-    #         msgBox = QMessageBox()
-    #         msgBox.setText("Only one item can be selected.")
-    #         msgBox.exec_()
-    #     elif len(L[0:len(L)/2]) == 1:
-    #         row = self.segsTable.row(L[0])
-    #         self.emit(SIGNAL("updata_seg"), self.segments[row])
-    #         if len(self.chroms) >= row and len(self.msrts) >= row:
-    #             self.emit(SIGNAL("show_mcr"), self.chroms[row], self.msrts[row])
-    #         else:
-    #             self.emit(SIGNAL("no_mcr"))
 
     def add_msrt(self, msrt):
         if self.MSRT != msrt['rt']:
@@ -160,18 +127,7 @@ class MSRTTableWidget(QtGui.QWidget):
         else:
             self.finished = []
 
-        # if len(rows):
-        #     for i in rows:
-        #         if i not in self.finished:
-        #             self.finished.extend([i])
-        #     self.finished.sort()
-        #     self.add_rtitem(self.MSRT)
-        # else:
-        #     self.finished = []
-
     def get_MSRT(self):
-        # self.MSRT = {"ms": self.ms, "rt":self.rt, "segno":self.segno}
-        # self.MSRT = {"ms": self.ms, "rt": self.rt, "segno": self.segno}
         return self.MSRT
 
     def get_rtitem(self):

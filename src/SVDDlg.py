@@ -6,12 +6,7 @@ from PyQt4.QtGui import *
 from PyQt4 import QtGui, QtCore
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector, SpanSelector, Button
-from matplotlib.ticker import FormatStrFormatter
 import numpy as np
-from NetCDF import netcdf_reader
-from chemoMethods import pcarep
-
 
 class SVDQDialg(QWidget):
     def __init__(self, parent=None):
@@ -23,8 +18,6 @@ class SVDQDialg(QWidget):
         self.pc_numbers = 0
 
         SVDLabel = QLabel("Sigular Value Decomposition")
-        # SVDLabel.setFont(QFont().setPointSize(12))
-
         ComsLabel = QLabel("Selected Number of Components:")
         self.numberLineEdit = QLineEdit()
         self.numberLineEdit.setEnabled(False)
@@ -120,28 +113,6 @@ class SVDQDialg(QWidget):
 
     def updata_data(self, x):
         self.x = x
-        # U, D, V = np.linalg.svd(np.dot(self.x['d'], self.x['d'].T))
-        # self.U = U
-        # self.D = D
-        # self.eigs = np.power(D, 0.5)
-        #
-        # self.axes1.plot(self.x['d'])
-        # self.axes1.set_ylim(np.min(self.x['d']), np.max(self.x['d'])*1.1)
-        # self.axes2.scatter(range(1, U.shape[0]+1), self.eigs, s=80, marker='o')
-        # # self.axes2.plot(self.eigs, s=20, c='b', marker='o')
-        # self.axes2.set_ylim(-0.1*np.max(self.eigs), np.max(self.eigs)*1.1)
-        # self.axes2.set_xlim(-1, len(self.eigs))
-        # self.axes3.plot(self.U[:, 0])
-        #
-        # # self.axes1.set_xlim(np.min(self.x), np.max(self.x))
-        # # self.axes1.set_ylim(0, len(self.eigs))
-        #
-        # for eig in self.eigs:
-        #     eigNameItem = QtGui.QTableWidgetItem(str(eig))
-        #     eigNameItem.setFlags(eigNameItem.flags() ^ QtCore.Qt.ItemIsEditable)
-        #     row = self.eigensTable.rowCount()
-        #     self.eigensTable.insertRow(row)
-        #     self.eigensTable.setItem(row, 0, eigNameItem)
 
     def do_svd(self):
         U, D, V = np.linalg.svd(np.dot(self.x['d'], self.x['d'].T))
@@ -157,9 +128,6 @@ class SVDQDialg(QWidget):
         self.axes2.set_xlim(-1, len(self.eigs))
         self.axes3.plot(self.U[:, 0])
 
-        # self.axes1.set_xlim(np.min(self.x), np.max(self.x))
-        # self.axes1.set_ylim(0, len(self.eigs))
-
         for eig in self.eigs:
             eigNameItem = QtGui.QTableWidgetItem(str(eig))
             eigNameItem.setFlags(eigNameItem.flags() ^ QtCore.Qt.ItemIsEditable)
@@ -171,7 +139,6 @@ class SVDQDialg(QWidget):
     def accept(self):
         self.pc_numbers = int(self.numberLineEdit.text())
         self.close()
-        # self.emit(SIGNAL('pc_numbers'), self.pc_numbers)
 
 if __name__ == '__main__':
 

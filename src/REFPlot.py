@@ -3,13 +3,11 @@ __author__ = 'Administrator'
 import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector, SpanSelector, Button
-from matplotlib.ticker import FormatStrFormatter
 import numpy as np
-from NetCDF import netcdf_reader
 
 class REFPlotWidget(QWidget):
     def __init__(self):
@@ -20,7 +18,6 @@ class REFPlotWidget(QWidget):
 
     def create_canvas(self):
         self.fig = plt.figure()
-        # self.fig.set_facecolor('red')
         self.canvas = FigureCanvas(self.fig)
         self.axes = plt.subplot(111)
         self.axes.set_xlabel("Retention Time")

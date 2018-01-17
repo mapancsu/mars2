@@ -1,40 +1,19 @@
 __author__ = 'Administrator'
 
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from NetCDF import netcdf_reader
-import numpy as np
-import sys
-from chemoMethods import mcr_als, pcarep, pure
-import PUREDWIDGET
-import ITERWIDGET
-
-
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
-import numpy as np
 from scipy.linalg import norm
-import sys
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector, SpanSelector
+from matplotlib.widgets import SpanSelector
 
-from HELP import FR, FSWFA, plotScore, svdX
+from HELP import FR, FSWFA,svdX
 from MARS_methods import fnnls
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
+from PyQt4 import QtGui
 from PyQt4.QtGui import *
-from NetCDF import netcdf_reader
 import numpy as np
 import sys
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from chemoMethods import pcarep, pure
+import pickle
 
 class HELPQDialg(QWidget):
     def __init__(self, parent=None):
@@ -45,8 +24,8 @@ class HELPQDialg(QWidget):
         self.ms = []
         self.rt = []
         self.createVariabletable()
-        self.create_canvas1('scan', 'ETA')
-        self.create_canvas2('scan', 'CHROM Profiles')
+        self.create_canvas1('scan', 'ETA or LPG')
+        self.create_canvas2('scan', 'Resolved Chromatographic Profiles')
         self.canvas1.setMinimumWidth(800)
         self.canvas1.setMaximumWidth(800)
         self.canvas2.setMinimumWidth(800)
@@ -99,7 +78,6 @@ class HELPQDialg(QWidget):
         hbox1.addWidget(self.DComboBox)
 
         hbox2 = QHBoxLayout()
-        # hbox2.addStretch()
         hbox2.addWidget(self.mthcombox)
         hbox2.addWidget(self.DoETA)
 
@@ -160,6 +138,10 @@ class HELPQDialg(QWidget):
         self.move(320, 75)
         self.setWindowTitle("HELP")
 
+        self.span1.set_active(True)
+        self.span2.set_active(False)
+        self.span3.set_active(False)
+
         self.DoETA.clicked.connect(self.eta)
         self.DoFR.clicked.connect(self.fr)
         self.undobtn.clicked.connect(self.undo)
@@ -210,8 +192,6 @@ class HELPQDialg(QWidget):
         plt.subplots_adjust(bottom=0.2, top=0.90, left=0.08, right=0.9)
         self.redraw1()
         self.span1.set_active(True)
-        self.span2.set_active(False)
-        self.span3.set_active(False)
 
     def create_canvas2(self, xname, title):
         self.fig2 = plt.figure()
@@ -269,6 +249,7 @@ class HELPQDialg(QWidget):
         # self.axes1.scatter(xmax, self.y[imax], s=30, marker='v',
         #     color='red', label='x1 samples')
         self.axes1.fill_between(range(imin, imax), self.oxy[1][0], self.oxy[1][1], facecolor='yellow', alpha=0.5)
+        self.redraw1()
         self.SComboBox1.setText(str(imin))
         self.SComboBox2.setText(str(imax))
 
@@ -282,6 +263,7 @@ class HELPQDialg(QWidget):
         # self.axes1.scatter(xmax, self.y[imax], s=30, marker='v',
         #     color='red', label='x1 samples')
         self.axes1.fill_between(range(imin, imax), self.oxy[1][0], self.oxy[1][1], facecolor='Green', alpha=0.5)
+        self.redraw1()
         self.OComboBox1.setText(str(imin))
         self.OComboBox2.setText(str(imax))
 
@@ -291,6 +273,7 @@ class HELPQDialg(QWidget):
         imax = min(len(ax)-1, imax)
         seg = ax[[imin, imax]]
         self.axes1.fill_between(range(imin,imax), self.oxy[1][0], self.oxy[1][1], facecolor='Green', alpha=0.5)
+        self.redraw1()
         self.OComboBox3.setText(str(imin))
         self.OComboBox4.setText(str(imax))
 
@@ -299,6 +282,9 @@ class HELPQDialg(QWidget):
         self.pc = pc
         self.new_x = x['d']
         self.axes1.plot(x['d'])
+        self.axes1.set_title("raw data", fontsize=9)
+        self.axes1.set_xlabel("Scans")
+        self.axes1.tick_params(axis='both', labelsize=8)
         self.LComboBox.setRange(1, self.pc)
         ymino, ymaxo = self.axes1.get_ylim()
         xmino, xmaxo = self.axes1.get_xlim()
@@ -308,22 +294,25 @@ class HELPQDialg(QWidget):
     def eta(self):
         self.layel = self.LComboBox.value()
         if self.layel < self.pc:
-            if self.mthcombox.currentText()=="ETA":
+            if self.mthcombox.currentText() == "ETA":
                 w = self.DComboBox.value()
                 self.l, self.em = FSWFA(self.new_x, w, self.pc)
                 self.axes1.clear()
-                self.axes1.set_xlabel("scan")
-                self.axes1.plot(self.l, self.em)
+                self.axes1.plot(self.l, self.em, '-o')
+                self.axes1.set_title("ETA", fontsize=9)
+                self.axes1.set_xlabel("Scans")
+                self.axes1.tick_params(axis='both', labelsize=8)
                 self.redraw1()
             else:
                 u, T = svdX(self.new_x)
                 self.axes1.clear()
-                self.axes1.plot(u[:, 0], u[:, 1], 'ro')
+                self.axes1.plot(u[:, 0], u[:, 1], '-o')
                 C = np.arange(0, u.shape[0])
                 for a, b, c in zip(u[:, 0], u[:, 1], C):
                     self.axes1.text(a, b + 0.001, '%.0f' % c, ha='center', va='bottom', fontsize=7)
                 self.axes1.set_xlabel("p1")
                 self.axes1.set_ylabel("p2")
+                self.axes1.set_title("LPG", fontsize=9)
                 self.redraw1()
             ymino, ymaxo = self.axes1.get_ylim()
             xmino, xmaxo = self.axes1.get_xlim()
@@ -353,8 +342,17 @@ class HELPQDialg(QWidget):
             msgBox.setText("Please input selective region or zero-concentration region")
             msgBox.exec_()
         if len(s) and len(z):
+            DATAF = open('HELP_m.pkl', 'w')
+            X = {'x': self.new_x, 'so':s[0], 'z':z[0]}
+            pickle.dump(X, DATAF)
+            DATAF.close()
             c, new_x = FR(self.new_x, s[0], z[0], self.pc-self.LComboBox.value()+1)
-            helpre = {'new_x':self.new_x, 'l':self.l, 'em':self.em, 'c': c}
+            # plt.plot(c)
+            # plt.show()
+            # plt.plot(new_x)
+            # plt.show()
+
+            helpre = {'new_x': self.new_x, 'l': self.l, 'em': self.em, 'c': c}
             if len(self.help_result) == self.layel:
                 self.help_result.pop(self.layel)
             self.help_result.append(helpre)
@@ -371,41 +369,47 @@ class HELPQDialg(QWidget):
             self.axes2.plot(c/np.linalg.norm(c))
             self.redraw2()
 
+            self.axes1.clear()
+            self.axes1.set_xlabel("scan")
+            self.axes1.plot(self.new_x)
+            self.axes1.set_title("after stripping", fontsize=9)
+            self.axes1.set_xlabel("Scans")
+            self.redraw1()
+            ymino, ymaxo = self.axes1.get_ylim()
+            xmino, xmaxo = self.axes1.get_xlim()
+            self.oxy = [(xmino, xmaxo), (ymino, ymaxo)]
+
             if self.layel == self.pc-1:
-                cc = np.sum(self.new_x, 1)
-                cc[cc<0]=0
-                maxp = np.argmax(cc)
-                minp = 0
-                for i in np.arange(maxp, 0, -1):
-                    if cc[i-1]>cc[i]:
-                        minp = i
+                #cc = np.sum(self.new_x, 1)
+                indd = np.argmax(np.sum(self.new_x, 0))
+                cc = self.new_x[:,indd]
+                ind = np.argmax(cc)
+
+                for i, indd in enumerate(np.arange(ind, 0, -1)):
+                    if cc[indd-1] >= cc[indd] and cc[indd-1] <= 0.5*np.max(cc):
+                        cc[0:indd] = 0
                         break
-                cc[0:minp]=0
-                minp = len(cc)-1
-                for i in np.arange(maxp, len(cc)):
-                    if cc[i+1]>cc[i]:
-                        minp = i
+                    if cc[indd-1] < 0:
+                        cc[0:indd] = 0
                         break
-                cc[minp:len(cc)]=0
+
+                for i, indd in enumerate(np.arange(ind, len(cc)-1, 1)):
+                    if cc[indd+1] >= cc[indd] and cc[indd+1] <= 0.5*np.max(cc):
+                        cc[indd+1:len(cc)] = 0
+                        break
+                    if cc[indd+1] < 0:
+                        cc[indd+1:len(cc)] = 0
+                        break
 
                 helpre = {'new_x': [], 'l': [], 'em': [], 'c': cc/np.linalg.norm(cc)}
                 self.help_result.append(helpre)
                 self.axes2.plot(cc/np.linalg.norm(cc))
                 self.redraw2()
+                return
 
             self.layel = self.layel+1
             w = self.DComboBox.value()
             self.l, self.em = FSWFA(self.new_x, w, self.pc-self.LComboBox.value()+1)
-            self.axes1.clear()
-            self.axes1.set_xlabel("scan")
-            self.axes1.plot(self.new_x)
-            self.redraw1()
-            ymino, ymaxo = self.axes1.get_ylim()
-            xmino, xmaxo = self.axes1.get_xlim()
-            self.oxy = [(xmino, xmaxo), (ymino, ymaxo)]
-            self.span1.set_active(True)
-            self.span2.set_active(False)
-            self.span3.set_active(False)
 
     def undo(self):
         self.axes1.clear()
@@ -414,25 +418,18 @@ class HELPQDialg(QWidget):
         self.axes2.set_xlabel("scan")
         self.LComboBox.setValue(1)
         self.help_result = []
+        self.rt = []
+        self.ms = []
         self.new_x = self.x['d']
         self.axes1.plot(self.new_x)
+        self.axes1.set_title("raw data", fontsize=9)
+        self.axes1.set_xlabel("Scans")
+        self.axes1.tick_params(axis='both', labelsize=8)
         self.redraw2()
         self.redraw1()
-        # layel = self.LComboBox.value()
-        # for i in range(layel-1, self.pc):
-        #     self.help_result.pop(i)
-        # if len(self.help_result):
-        #     resul = self.help_result[-1]
-        #     self.axes1.plot(resul["new_x"])
-        #     self.new_x = resul["new_x"]
-        #     for i in range(0, len(self.help_result)):
-        #         self.axes2.plot(self.help_result[i]['c'])
-        # else:
-        #     self.axes1.plot(self.x['d'])
-        #     self.new_x = self.x['d']
 
     def getmsrt(self):
-        if len(self.help_result)==self.pc:
+        if len(self.help_result) == self.pc:
             C = np.zeros((self.x['d'].shape[0], self.pc))
             for i, v in enumerate(self.help_result):
                 C[:, i] = self.help_result[i]['c']
@@ -457,7 +454,7 @@ class HELPQDialg(QWidget):
         if len(self.rt):
             RESU = {"methods": "H", "ms": self.ms, 'rt': self.rt, 'mz': self.x['mz'], 'pc':self.pc, 'R2': 'none'}
         else:
-            RESU = []
+            RESU = {}
         return RESU
 
 if __name__ == '__main__':

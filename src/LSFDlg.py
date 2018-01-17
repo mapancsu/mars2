@@ -4,31 +4,21 @@ __author__ = 'Administrator'
 import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector, SpanSelector, Button
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.widgets import SpanSelector, Button
 import numpy as np
-from NetCDF import netcdf_reader
 
 class LSFQDialg(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         self.handles = []
         self.create_canvas()
-
-        # self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        # self.buttonBox.button(QDialogButtonBox.Ok).setDefault(True)
-        # self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
-        # self.connect(self.buttonBox, SIGNAL("rejected()"), self.close)
-        # self.connect(self.buttonBox, SIGNAL("accepted()"), self.accept)
         self.segments = []
 
         vbox = QVBoxLayout()
         vbox.addWidget(self.canvas)
-        # vbox.addWidget(self.buttonBox)
-        # vbox.addLayout(hbox)
         self.setLayout(vbox)
 
         self.resize(800, 600)
@@ -57,20 +47,9 @@ class LSFQDialg(QWidget):
         self.btnundo = Button(axundo, 'undo')
         self.btnstar = Button(axstar, 'start')
 
-        # axorg = plt.axes([0.92, 0.825, 0.06, 0.075])
-        # axfit = plt.axes([0.92, 0.725, 0.06, 0.075])
-        # axbas = plt.axes([0.92, 0.625, 0.06, 0.075])
-        # self.btnorg = Button(axorg, 'ORG')
-        # self.btnbas = Button(axbas, 'BAS')
-        # self.btnfit = Button(axfit, 'FIT')
-
         self.btnspan.on_clicked(self.span_mode)
         self.btnundo.on_clicked(self.undo_mode)
         self.btnstar.on_clicked(self.star_mode)
-
-        # self.btnorg.on_clicked(self.add_org)
-        # self.btnbas.on_clicked(self.add_bas)
-        # self.btnfit.on_clicked(self.add_fit)
 
         self.span.set_active(True)
         self.redraw()
@@ -87,7 +66,6 @@ class LSFQDialg(QWidget):
         self.span.connect_event('button_press_event', self.span.press)
         self.span.connect_event('button_release_event', self.span.release)
         self.span.connect_event('draw_event', self.span.update_background)
-        # self.span.connect_event('button_press_event', self.mouse_press_callback)
         self.leftdblclick = False
         self.rightdblclick = False
         self.redraw()
@@ -109,7 +87,6 @@ class LSFQDialg(QWidget):
             msgBox.exec_()
         else:
             fit, bas = self.backremv(self.segments)
-            # self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
             self.show_bas(bas)
             self.show_fit(fit)
             self.emit(SIGNAL('after_baseline'), fit)
@@ -137,6 +114,9 @@ class LSFQDialg(QWidget):
     def updata_data(self, x):
         self.xx = x
         self.axes.clear()
+        self.axes.set_xlabel("Scans")
+        self.axes.set_ylabel("Instensity")
+        self.axes.set_title("Least Square Fitting(2D)", fontsize=9)
         self.x = x['d']
         self.y = np.sum(self.x, axis=1)
         self.axes.plot(self.y, lw=1, c='b', alpha=.7, picker=5)

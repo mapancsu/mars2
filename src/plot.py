@@ -9,18 +9,11 @@ Created on 2015-11-10
 
 '''
 
-from numpy import zeros, hstack, ix_
 from numpy.linalg import norm
-from matplotlib.ticker import FormatStrFormatter
 from scipy.linalg import norm
-from numpy.linalg import svd
-import scipy.io as nc
 import matplotlib.pyplot as plt
-import math
 import numpy as np
-import sys
 import pickle
-import scipy
 from NetCDF import netcdf_reader
 from MARS_methods import findTZ, MSWFA, gridsearch, polyfitting, ittfa, count99
 from chemoMethods import backremv

@@ -1,13 +1,11 @@
 __author__ = 'Administrator'
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtGui
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from NetCDF import netcdf_reader
 import numpy as np
 import sys
-from chemoMethods import mcr_als, pcarep, pure
-
+from chemoMethods import mcr_als, pcarep
 import SVDDlg
 import PUREDWIDGET
 
@@ -61,7 +59,6 @@ class MCRALSsetWidget(QtGui.QWidget):
         self.startButton1 = QPushButton("Start")
 
         mainLayout = QGridLayout()
-        # mainLayout.setSpacing(15)
         mainLayout.addWidget(SegLabel, 0, 0)
         mainLayout.addWidget(self.SegnoBox, 0, 1)
         mainLayout.addWidget(methodsLabel1, 1, 0)
@@ -116,17 +113,6 @@ class MCRALSsetWidget(QtGui.QWidget):
                 if np.any(puredlg.pures) == True:
                     self.mcrals(puredlg.pures)
 
-    # def initial(self):
-    #     if self.methodsComboBox2.currentText() == "Pure":
-    #         puredlg = PUREDlg.PUREQDialg()
-
-    # def initial(self):
-    #     index = self.SegnoBox.value()
-    #     self.segno = self.segments[index]
-    #     self.xdata = self.ncr.mat(self.segno[0], self.segno[1], 1)
-    #     self.x = self.xdata['d']
-    #     self.rt = self.xdata['rt']
-
     def mcrals(self, pure):
         options = {}
         options['mass'] = np.array([self.nonnegativeBox2.currentText(),
@@ -159,9 +145,7 @@ class MCRALSsetWidget(QtGui.QWidget):
         self.SegnoBox.setValue(1)
 
     def updata_index(self, index):
-        # self.seg = self.segments[index]
         self.SegnoBox.setValue(index)
-        # self.x = self.ncr.mat(self.seg[0], self.seg[1], 1)
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)

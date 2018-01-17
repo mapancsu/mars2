@@ -3,13 +3,11 @@ __author__ = 'Administrator'
 import sys
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector, SpanSelector, Button
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import numpy as np
-from NetCDF import netcdf_reader
 
 class TICPlot(QWidget):
     def __init__(self):
@@ -22,14 +20,11 @@ class TICPlot(QWidget):
 
     def create_canvas(self):
         self.fig = plt.figure()
-        #self.fig.set_facecolor('white')
         self.canvas = FigureCanvas(self.fig)
         self.axes = plt.subplot(111)
         self.axes.set_xlabel("Retention Time")
         self.axes.set_ylabel("Instensity")
         self.axes.tick_params(axis='both', labelsize=8)
-
-        # plt.rcParams['xtick.labelsize'] = 9
 
         plt.subplots_adjust(bottom=0.25, top=0.90, left=0.08, right=0.9)
         self.zoom = RectangleSelector(self.axes, self.rectangle_select_callback,
@@ -93,7 +88,6 @@ class TICPlot(QWidget):
             self.axes.set_xlabel("Retention Time")
             self.axes.set_ylabel("Instensity")
             self.axes.set_title(str(fn),fontsize=9)
-            # self.axes.set_fontsize(fontsize = 8.5)
             self.axes.plot(self.x, self.y, lw=1, c='b', alpha=.7, picker=5)
             self.axes.set_xlim(min(self.x), max(self.x))
             self.axes.set_ylim(min(self.y), max(self.y)*1.1)

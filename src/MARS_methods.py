@@ -9,19 +9,12 @@ Created on 2015-11-10
 
 '''
 
-from numpy import zeros, hstack, ix_
-from matplotlib.ticker import FormatStrFormatter
+from numpy import ix_
 from scipy.linalg import norm
-from numpy.linalg import svd
-import scipy.io as nc
 import matplotlib.pyplot as plt
 import math
 import numpy as np
-import sys
 import pickle
-import scipy
-import time
-
 from NetCDF import netcdf_reader
 
 
@@ -187,9 +180,6 @@ def PCS(x, max_pc):
         e = v[0:j+1, :]
         pures = pure(x.T, nr=j+1, f=0.1)
         f = pures['SP']
-        # plt.plot(e.T, 'b')
-        # plt.plot(f.T, 'r')
-        # plt.show()
         d.append(j-np.trace(np.dot(np.dot(np.dot(f, e.T), e), f.T))+1)
     dv = np.sort(d)
     index = np.argsort(d)
@@ -203,7 +193,7 @@ def PCS(x, max_pc):
         pcs = index[0]+1
     return pcs
 
-def findTZ(ncr, rts, mss, pw, w, mth):
+def findTZ(ncr, rts, mss, pw, w, thre, mth):
     pos = 0
     max_pc = 5
     tic_dict = ncr.tic()
@@ -213,7 +203,7 @@ def findTZ(ncr, rts, mss, pw, w, mth):
     end = min([sc+pw, len(tic_rt)-1])
     seg = [sta, end+1]
     segx = ncr.mat(seg[0], seg[1]-1, 1)
-    resp, eig, ir = MSWFA(segx['d'], mss, max_pc, w, mth)
+    resp, eig, ir = DetectTZ(segx['d'], mss, max_pc, w, thre, mth)
     # plt.plot(eig)
     # plt.show()
     vseg = np.arange(seg[0], seg[1])
@@ -231,7 +221,7 @@ def findTZ(ncr, rts, mss, pw, w, mth):
         irr = [0, 0]
     return tz, seg, x, segx['d'], pos+1, irr
 
-def nMSWFA(d, ms, max_pc, w):
+def MSWFA(d, ms, max_pc, w):
     s = np.zeros(d.shape[0])
     for j in range(0, d.shape[0]-w):
         d1 = d[j:j+w, :]
@@ -245,54 +235,28 @@ def nMSWFA(d, ms, max_pc, w):
         s[j+math.ceil((w-1)/2)] = S[0]
     return s
 
-def MSWFA(d, ms, max_pc, w, mth=None):
-    # plt.plot(d)
-    # plt.show()
-    if mth=='RM':
-        # t1 = time.time()
+def DetectTZ(d, ms, max_pc, w, thre, mth=None):
+    if mth == 'RM':
         s = reverse_match(d, ms[0, :])
-        # t2 = time.time()
-        # print(t2 - t1)
     else:
-        # t1 = time.time()
-        # s = np.zeros(d.shape[0])
-        # for j in range(0, d.shape[0]-w):
-        #     d1 = d[j:j+w, :]
-        #     u, ss, e = np.linalg.svd(d1)
-        #     M = np.dot(np.dot(np.dot(e[0:max_pc, :], ms.T), ms), e[0:max_pc, :].T)
-        #     S = np.diag(M)
-        #     if np.max(s) == 0:
-        #         s[0:j+math.ceil((w-1)/2)] = S[0]
-        #     if j+w == d.shape[0]-1:
-        #         s[j + math.ceil((w - 1) / 2):d.shape[0]] = S[0]
-        #     s[j+math.ceil((w-1)/2)] = S[0]
-        s = nMSWFA(d, ms, max_pc, w)
-        # t2 = time.time()
-        # print(t2-t1)
-
+        s = MSWFA(d, ms, max_pc, w)
     maxs = np.max(s)
     pos = np.argmax(s)
 
     tt = np.sum(d, axis=1)
     inter = shrink(tt, pos)
-
-    # plt.plot(s)
-    # plt.show()
-
-    # region = np.array([0, len(s)-1], ndmin=2)
-    # ir = np.array([0, len(s)-1], ndmin=2)
     region = np.array(inter, ndmin=2)
     ir = np.array(inter, ndmin=2)
     for i, val in enumerate(range(pos, inter[0], -1)):
-        if s[val-1] <= 0.9*maxs and ir[0, 0] == inter[0]:
+        if s[val-1] <= thre*maxs and ir[0, 0] == inter[0]:
             ir[0, 0] = val
-        if (s[val-1] >= s[val] and s[val-1] <= 0.9*maxs) or s[val-1] <= 0.1*maxs:
+        if (s[val-1] >= s[val] and s[val-1] <= thre*maxs) or s[val-1] <= 0.1*maxs:
             region[0, 0] = val
             break
     for i, val in enumerate(range(pos, inter[1])):
-        if s[val+1] <= 0.9*maxs and ir[0, 1] == inter[1]:
+        if s[val+1] <= thre*maxs and ir[0, 1] == inter[1]:
             ir[0, 1] = val+1
-        if (s[val+1] >=s [val] and s[val+1] <= 0.9*maxs) or s[val+1] <= 0.1*maxs:
+        if (s[val+1] >=s [val] and s[val+1] <= thre*maxs) or s[val+1] <= 0.1*maxs:
             region[0, 1] = val+1
             break
     ir[0, 0] = max([region[0,0], ir[0, 0]])
@@ -323,20 +287,19 @@ def shrink(x, p):
             ep = i
             ev = x[i]
             break
-
     if sp==0 and ep!=len(x)-1:
         maxv = np.max(x[sp:ep])
-        if maxv/x[ep]>=10:
+        if maxv/x[ep]>=2:
             return [0, ep]
     elif sp!=0 and ep==len(x)-1:
         maxv = np.max(x[sp:ep])
-        if maxv/x[sp]>=10:
+        if maxv/x[sp]>=2:
             return [sp, len(x)-1]
     elif sp!=0 and ep!=len(x)-1:
         maxv = np.max(x[sp:ep])
-        if maxv/x[sp]>=10:
+        if maxv/x[sp]>=3:
             inter[0] = sp
-        if maxv/x[ep]>=10:
+        if maxv/x[ep]>=3:
             inter[1] = ep
         return inter
     return inter
@@ -352,47 +315,6 @@ def reverse_match(d, mms):
         RM.append(np.sum(np.power(np.dot(d[i,index],ms),2))/(np.sum(np.power(d[i,index],2))*np.sum(np.power(ms,2))))
     return RM
 
-
-# def MSWFA(d, ms, max_pc, w, thres):
-#     # plt.plot(d)
-#     # plt.show()
-#     s = np.zeros(d.shape[0])
-#     for j in range(0, d.shape[0]-w):
-#         d1 = d[j:j+w, :]
-#         u, ss, e = np.linalg.svd(d1)
-#         M = np.dot(np.dot(np.dot(e[0:max_pc, :], ms.T), ms), e[0:max_pc, :].T)
-#         S = np.diag(M)
-#         if np.max(s) == 0:
-#             s[0:j+math.ceil((w-1)/2)] = S[0]
-#         if j+w == d.shape[0]-1:
-#             s[j + math.ceil((w - 1) / 2):d.shape[0]] = S[0]
-#         s[j+math.ceil((w-1)/2)] = S[0]
-#
-#     maxs = np.max(s)
-#     pos = np.argmax(s)
-#
-#     plt.plot(s)
-#     plt.show()
-#
-#     region = np.array([0, 0], ndmin=2)
-#     region[0, 0] = 0
-#     region[0, 1] = len(s)-1
-#     up09 = [0, len(s)-1]
-#     for i, val in enumerate(range(pos, 0, -1)):
-#         if (s[val-1] >= s[val] and s[val-1] <= 0.9*maxs) or s[val-1] <= 0.025*maxs:
-#             region[0, 0] = val
-#             if s[val-1] <= 0.9*maxs:
-#                 up09[0] = val
-#             break
-#     for i, val in enumerate(range(pos, len(s)-1)):
-#         if (s[val+1] >=s [val] and s[val+1] <= 0.9*maxs) or s[val+1] <= 0.025*maxs:
-#             region[0, 1] = val+1
-#             if s[val+1] <= 0.9*maxs:
-#                 up09[1] = val+1
-#             break
-#     mpos = int(np.floor(sum(up09)/2))-region[0, 0]+1
-#     return region, mpos
-
 def ppsvd(x, mpc):
     u, s, v = np.linalg.svd(x)
     dpc = []
@@ -405,8 +327,6 @@ def ppsvd(x, mpc):
         dpc.append(s[i]/s[i+1])
         dp.append(s[i])
         ex.append(np.linalg.norm(y))
-
-    # plt.plot(dp, 'ro')
     fig = plt.figure()
     ax = plt.subplot(111)
     ax.plot(range(1, mpc+1), exp, 'bs-')
@@ -436,13 +356,7 @@ def polyfitting(c, dtz, cols, ms):
         if not len(cols):
             return np.zeros(c.shape), 0, 0
         k = np.polyfit(np.sum(Z[:, cols], axis=1), np.sum(dtz[:, cols], axis=1), 1)
-        #cors[np.where(cors != cors)[0]] = 0
-        # if len(np.where(k != k)[0]):
-        #     return np.zeros(c.shape), 0, 0
         dd = abs(k[0])*Z
-        # plt.plot(np.sum(dtz, axis=1), 'go--')
-        # plt.plot(np.sum(dd,axis=1), 'rs--')
-        # plt.show()
         area = np.sum(dd)
         heig = np.max(np.sum(dd, 0))
         chrom = np.sum(dd, axis=1)
@@ -467,6 +381,9 @@ def mars(ncr, msrt, options):
     pw = options['pw']
     w = options['w']
     thre = options['thres']
+    max_CN = options['maxCN']
+    coef = options['coef']
+    R2PCA = options['R2-PCA']
     mth = 'RM'
     chrs = []
     orcs = []
@@ -476,11 +393,9 @@ def mars(ncr, msrt, options):
     highs = np.zeros(len(rts))
     for i in range(0, len(rts)):
         print(i)
-        if i == 1:
-            cc = i
         ms = np.array(mss[i], ndmin=2)
-        tz, seg, x, segx, maxpos, irr = findTZ(ncr, rts[i], ms, pw, w, mth)
-        c, vsel, nu = gridsearch(x, maxpos, 5, irr)
+        tz, seg, x, segx, maxpos, irr = findTZ(ncr, rts[i], ms, pw, w, thre, mth)
+        c, vsel, nu = gridsearch(x, maxpos, max_CN, coef, R2PCA, irr)
         chrom, a, h,d = polyfitting(c, x, vsel, ms)
         # plt.plot(chrom,'r')
         # plt.show()
@@ -554,7 +469,7 @@ def pc_estimate(x, mpc):
             pcs.append(i+1)
     return pcs
 
-def gridsearch(x, col, row0, irr):
+def gridsearch(x, col, row0, coef, R2PCA, irr):
     u, s, v = np.linalg.svd(x)
     row = range(1, row0+1)
     pos = []
@@ -566,7 +481,7 @@ def gridsearch(x, col, row0, irr):
     exp = []
     for i, row0 in enumerate(row):
         c = ittfa(x, col, row0)
-        vsel90, vsel99 = count99(x, c)
+        vsel90, vsel99 = count99(x, c, coef)
         y = np.dot(np.dot(u[:, 0:i + 1], np.diag(s[0:i + 1])), v[0:i + 1, :])
         exp.append(np.linalg.norm(y) / np.linalg.norm(x))
         vsels.append(vsel90)
@@ -576,13 +491,13 @@ def gridsearch(x, col, row0, irr):
         pos.append(np.argmax(c)+1)
         C.append(c)
     # op1 = np.where(np.array(exp) >= 0.99)[0]
-    op1 = np.where((np.array(pos) >=irr[0]) & (np.array(pos) <= irr[1]))[0]
+    op1 = np.where((np.array(pos) >= irr[0]) & (np.array(pos) <= irr[1]))[0]
     # op = [val for val in op1 if val in op2]
     if len(op1):
         n99 = np.array(nums99)[op1]
         n90 = np.array(nums)[op1]
-        opp= np.where(n99>=1)[0]
-        opp90 = np.where(n90>=1)[0]
+        opp = np.where(n99 >= 1)[0]
+        opp90 = np.where(n90 >= 1)[0]
         # exp_op = np.array(exp)[op2]
         if len(opp):
             op2 = op1[opp]
@@ -593,9 +508,9 @@ def gridsearch(x, col, row0, irr):
             op = op2[ind]
             # exp_op = np.array(exp)[op]
             for i in op:
-                if np.array(exp)[i]>=0.99 and max(nums99)-np.array(nums99)[i]<=5:
+                if np.array(exp)[i] >= R2PCA and max(nums99)-np.array(nums99)[i] <= 5:
                     return C[i], vsels[i], i+1
-            if np.array(exp)[-1]<0.99:
+            if np.array(exp)[-1] < R2PCA:
                 return C[op2[ind]], vsels[op2[ind]], op2[ind]+1
 
         if len(opp90):
@@ -603,29 +518,26 @@ def gridsearch(x, col, row0, irr):
             nn99 = np.array(nums)[op2]
             ind = np.argmax(nn99)
             # return C[op2[ind]], vsels[op2[ind]]
-
             op = op2[ind:]
             # exp_op = np.array(exp)[op]
             for i in op:
-                if np.array(exp)[i]>=0.99:
+                if np.array(exp)[i] >= R2PCA:
                     return C[i], vsels[i], i+1
-            if np.array(exp)[-1] < 0.99:
+            if np.array(exp)[-1] < R2PCA:
                 return C[op2[ind]], vsels[op2[ind]], op2[ind]+1
-
         # if not len(opp) and not len(opp90):
         return np.zeros((x.shape[0], 1)), [], 0
     else:
         return np.zeros((x.shape[0],1)), [], 0
 
 
-def count99(x, c):
+def count99(x, c, coef):
     vse = np.where(np.any(x, axis=0))[0]
     cc = np.hstack((x[:,vse], c))
     cors = np.corrcoef(cc.T)[0:-1, -1]
-    # cors[np.where(cors != cors)[0]] = 0
     vsel90 = vse[np.where(cors >= 0.9)[0]]
-    vsel95 = vse[np.where(cors >= 0.99)[0]]
-    return vsel90, vsel95
+    vsel99 = vse[np.where(cors >= coef)[0]]
+    return vsel90, vsel99
 
 # def count99(x, c0):
 #     c = c0[:, 0]
@@ -657,8 +569,8 @@ if __name__ == '__main__':
     rts = msrt['rt']
     ms = msrt['ms']
 
-    com =24
-    tz, seg, x, segx, maxpos, irr = findTZ(ncr, rts[com], np.array(ms[com], ndmin=2), pw, w, thre)
+    com =48
+    tz, seg, x, segx, maxpos, irr = findTZ(ncr, rts[com], np.array(ms[com], ndmin=2), pw, w, mth='RM')
     # RM = reverse_match(x,  ms[com])
     # plt.plot(RM)
     # plt.show()
@@ -674,18 +586,19 @@ if __name__ == '__main__':
     c2 = ittfa(x, maxpos, 3)
     c3 = ittfa(x, maxpos, 4)
     c4 = ittfa(x, maxpos, 5)
-    c5 = ittfa(x, maxpos, 11)
+    c5 = ittfa(x, maxpos, 6)
+    c6 = ittfa(x, maxpos, 11)
     #
     fig1 = plt.figure(311)
     plt.subplot(311)
-    plt.plot(x)
+    plt.plot(x, 'k')
     plt.subplot(312)
-    plt.plot(c0, 'g')
-    plt.plot(c1, 'r')
-    plt.plot(c2, 'y')
-    plt.plot(c3, 'c')
-    plt.plot(c4, 'k')
-    plt.plot(c5, 'b')
+    # plt.plot(c0, 'g')
+    plt.plot(c0, 'k')
+    # plt.plot(c2, 'y')
+    # plt.plot(c3, 'c')
+    plt.plot(c5, 'r')
+    plt.plot(c6, 'b')
 
     # plt.plot(c4, 'g')
     # plt.plot(c5, 'r')

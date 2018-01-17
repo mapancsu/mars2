@@ -114,8 +114,11 @@ def plot_tic(tic_dict):
 
 if __name__ == '__main__':
 
-    filename = 'E:/BDY-Synchronize/pycharm-GUI/pycharm_project/storedata/t1(2).cdf'
+    #filename = 'E:/BDY-Synchronize/pycharm-GUI/pycharm_project/storedata/t1(2).cdf'
+    #filename = 'F:/MARS/data_save/D6/73.CDF'
+    filename = 'F:/MARS/data_save/STDAND/zhi10-5vs1.CDF'
     ncr = netcdf_reader(filename, bmmap=False)
+    tics = ncr.tic()
     m = ncr.mat(0, 8774, 1)
     tic = ncr.tic()
     # plot(m['d'])

@@ -1,16 +1,13 @@
 __author__ = 'Administrator'
 
 import sys
-from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-from matplotlib.widgets import RectangleSelector, SpanSelector, Button
-from matplotlib.ticker import FormatStrFormatter
+from matplotlib.widgets import Button
 import numpy as np
 import math
-from NetCDF import netcdf_reader
 
 class MCRALSMASSPlotDlg(QWidget):
     def __init__(self):
@@ -19,12 +16,8 @@ class MCRALSMASSPlotDlg(QWidget):
         self.showing = 0
         self.curr_no = -1
         self.create_canvas()
-
-        # self.chromQwidget = CHROMQWidget()
-
         self.tablewidget = QTabWidget()
         self.tablewidget.addTab(self.canvas,"MASS")
-        # self.tablewidget.addTab(self.chromQwidget.canvas,"CHROM")
 
         mainlayout = QVBoxLayout()
         mainlayout.addWidget(self.tablewidget)
@@ -38,7 +31,6 @@ class MCRALSMASSPlotDlg(QWidget):
         self.axes1.tick_params(axis='both', labelsize=8)
         self.axes2.tick_params(axis='both', labelsize=8)
 
-        # plt.subplots_adjust(left=0.06, right=0.95, bottom=0.08, top=0.95, wspace=0.25, hspace=0.25)
         plt.subplots_adjust(bottom=0.15, top=0.9, hspace=0.35)
         self.canvas = FigureCanvas(self.fig)
 
@@ -107,23 +99,6 @@ class MCRALSMASSPlotDlg(QWidget):
         # self.nextbutton.setEnabled(True)
         # self.chrobutton.setEnabled(True)
 
-    # def add_resolchrom(self):
-    #     # self.addrawmass(self.RESU, self.seg, self.no)
-    #     self.chromQwidget.updata_data(self.RESU['tic'], self.RESU['chro'], self.titlsub)
-    #     # self.chromQwidget.show()
-    #     self.showing = 1
-
-    # def clear_plot(self):
-    #     if self.showing == 1:
-    #         self.chromQwidget.close()
-    #         self.showing = 0
-    #     self.axes2.clear()
-    #     self.axes2.set_xlabel("m/z")
-    #     self.axes2.set_title("Resolved Mass:", fontsize=8.5)
-        # self.prevbutton.setEnabled(False)
-        # self.nextbutton.setEnabled(False)
-        # self.chrobutton.setEnabled(False)
-
     def updata_pmass(self, event):
         if self.curr_no >= 2:
             self.curr_no = self.curr_no-1
@@ -165,7 +140,6 @@ class MCRALSMASSPlotDlg(QWidget):
         self.axes1.set_title("Raw MASS", fontsize=8.5)
         self.axes2.set_title("Resolved MASS",fontsize=8.5)
         self.axes2.set_xlabel("m/z")
-        #self.chromQwidget.loading()
 
 class CHROMQWidget(QWidget):
     def __init__(self):
@@ -196,11 +170,7 @@ class CHROMQWidget(QWidget):
         self.axes.plot(chroms.T, 'go--', label='resolved')
         self.axes.plot(tic, 'rs-', label='origin')
         self.axes.set_title("Resolved Chrom: "+subtitle, fontsize=8.5)
-        # self.axes.legend(handles=[line1, line2], locals=3)
-        # self.fig.legend((line1, line2), ('resolved', 'origin'))
-        # plt.legend(bbox_to_anchor=(0.8, 1.0), loc=2, borderaxespad=0.)
         self.redraw()
-        # plt.legend(handles=[line1, line2])
 
     def loading(self):
         self.axes.clear()

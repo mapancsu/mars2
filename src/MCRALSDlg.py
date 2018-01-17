@@ -1,33 +1,9 @@
 __author__ = 'Administrator'
 
-
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from NetCDF import netcdf_reader
-import numpy as np
-import sys
-from chemoMethods import mcr_als, pcarep, pure
-import PUREDWIDGET
-import ITERWIDGET
-
-
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
-import numpy as np
 from scipy.linalg import norm
-import sys
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-import matplotlib.pyplot as plt
-
-from chemoMethods import mcr_als, pcarep, pure
-
+from chemoMethods import mcr_als
 from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from NetCDF import netcdf_reader
 import numpy as np
 import sys
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -44,7 +20,7 @@ class MCRALSQDialg(QWidget):
         self.r2opt = []
         self.createVariabletable()
         self.create_canvas1('scan', 'Purest variable')
-        self.create_canvas2('scan', 'ITERATION CHROM')
+        self.create_canvas2('scan', 'Resolved Chromatographic Profiles')
         self.canvas1.setMinimumWidth(800)
         self.canvas1.setMaximumWidth(800)
         self.canvas2.setMinimumWidth(800)
@@ -223,12 +199,17 @@ class MCRALSQDialg(QWidget):
         u, s, v, d, sd = pcarep(dn, self.pc)
         sstn = np.sum(np.power(dn, 2))
         sst = np.sum(np.power(d, 2))
+        sigma2 = np.power(sstn, 0.5)
         nit = 30
+        crs = self.pures
         while niter < nit:
             niter += 1
             conc, spec, res, resn, u, un, sigma, change, lof_pca, lof_exp, r2 = \
-                mcr_als(self.x, self.pc, self.pures, options)
-            del self.axes2.collections[:]
+                mcr_als(d, dn, sst, sstn, sigma2, crs, options)
+
+            self.axes2.clear()
+            self.axes2.set_xlabel('scan')
+            self.axes2.set_title('Resolved Chromatographic Profiles')
             self.axes2.plot(conc)
             self.redraw2()
 
@@ -240,7 +221,11 @@ class MCRALSQDialg(QWidget):
             lof_pca = np.power((u/sst), 0.5)*100
             lof_exp = np.power((un/sstn), 0.5)*100
             r2 = (sstn-un)/sstn
-            if change > 0 or niter == 0:
+            if change > 0 or niter == 1:
+                print(change)
+                print(sigma)
+                print(sigma2)
+                sigma2 = sigma
                 copt = conc
                 sopt = spec
                 itopt = niter+1
@@ -253,6 +238,7 @@ class MCRALSQDialg(QWidget):
             if idev >= 20:
                 print('FIT NOT IMPROVING FOR 20 TMES CONSECUTIVELY (DIVERGENCE?), STOP!!!')
                 break
+            crs = spec
             print(str(niter))
         self.r2opt = r2opt
         rts = self.rttic[np.sort(np.argmax(copt, axis=0))]
@@ -293,7 +279,7 @@ class MCRALSQDialg(QWidget):
         if len(self.rt):
             RESU = {"methods": "M", "ms": self.ms, 'rt': self.rt, 'mz': self.X['mz'], 'pc':self.pc,'R2': self.r2opt}
         else:
-            RESU = []
+            RESU = {}
         return RESU
 
 

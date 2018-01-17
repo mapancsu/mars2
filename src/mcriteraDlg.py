@@ -9,8 +9,7 @@ from scipy.linalg import norm
 import sys
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 import matplotlib.pyplot as plt
-
-from chemoMethods import mcr_als, pcarep, pure
+from chemoMethods import mcr_als
 
 class iterQDialg(QDialog):
     def __init__(self, parent=None):

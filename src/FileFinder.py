@@ -12,12 +12,9 @@ class FileFinderWidget(QtGui.QWidget):
         super(FileFinderWidget, self).__init__(parent)
 
         dir = sys.path[0]+'\\data_save'
-        # if not os.path.exists(dir):
-        #     os.makedirs(dir)
 
         if '\\library.zip' in dir:
             dir = dir.replace('\\library.zip', "")
-            # dir = dir + 'data_save'
         if not os.path.isdir(dir):
             os.makedirs(dir)
         self.files = {'fn':[], 'files':[],'dir': dir}
@@ -41,7 +38,6 @@ class FileFinderWidget(QtGui.QWidget):
         mainLayout.addWidget(self.directoryComboBox, 1, 1)
         mainLayout.addWidget(browseButton, 1, 2)
         mainLayout.addWidget(self.filesTable, 2, 0, 1, 3)
-        # mainLayout.addWidget(self.filesFoundLabel, 3, 0)
         mainLayout.addLayout(buttonsLayout, 3, 0, 1, 3)
         self.setLayout(mainLayout)
 
@@ -116,7 +112,6 @@ class FileFinderWidget(QtGui.QWidget):
         sizeItem = QtGui.QTableWidgetItem("%d KB" % (int((size + 1023) / 1024)))
         sizeItem.setTextAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
         sizeItem.setFlags(sizeItem.flags() ^ QtCore.Qt.ItemIsEditable)
-        # row = self.filesTable.rowCount()
         self.filesTable.insertRow(row)
         self.filesTable.setItem(row, 0, fileNameItem)
         self.filesTable.setItem(row, 1, sizeItem)
@@ -242,25 +237,19 @@ class FileFinderWidget(QtGui.QWidget):
         files = []
         fn = []
         for i in range(0, len(fns['files'])):
-            # fn.append(unicode(fns['fn'][i]))
             fn.append(QString(fns['fn'][i]))
             files.append(QString(fns['files'][i]))
         return {'fn': fn, 'files': files, 'dir': dir}
 
     def loading(self, files):
-        # dir = self.directoryComboBox.currentText()
-        # self.files = {'dir': dir}
         self.filesTable.setRowCount(0)
         self.filesTable.setHorizontalHeaderLabels(("File Name", "Size"))
 
         dir = files['dir']
-        # self.directoryComboBox.addItem(directory1)
-        # self.directoryComboBox.setCurrentIndex(self.directoryComboBox.findText(dir))
         self.directoryComboBox.setEditText(QString(dir))
         path = self.directoryComboBox.currentText()
         self.updateComboBox(self.directoryComboBox)
         self.currentDir = QtCore.QDir(path)
-
         self.files = self.str2Qstr(files)
 
         for i, fn in enumerate(self.files['fn']):
