@@ -31,7 +31,7 @@ MARS2 was implemented efficiently in Python programming language. All resource c
 
 We have already noticed that user interface for feature extraction was helpful for parameter optimizing problem and stability of results. So we have compiled this MARS2 algorithm and encapsulate with inno setup to provide a better user interface for feature extraction. One can tune  parameters and visualize results easily.
 
-- It can be downloaded from this [url](https://github.com/mapancsu/mars2/tree/master/win64.exe)
+- It can be downloaded from this [url](https://github.com/mapancsu/mars2/releases)
 - Click the downloaded exe file, install it in your computer and run the installed program.
 
 ## 2.3 Guide for user ##
